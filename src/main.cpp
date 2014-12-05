@@ -6,6 +6,17 @@
 #include <e_line_judge/line_decision.h>
 #include <iostream>
 
+cv::Point2i ball_center;
+
+void mouseCallback(int event, int x, int y, int flags, void *param)
+{
+    if (event == CV_EVENT_LBUTTONDOWN)
+    {
+        ball_center.x = x;
+        ball_center.y = y;
+    }
+}
+
 int main(int argc, char** argv)
 {
     UserCalibration uc;
@@ -14,11 +25,29 @@ int main(int argc, char** argv)
     cv::Scalar lower_range;
     cv::Scalar upper_range;
     uc.getBallHSVRange(image, lower_range, upper_range);
-    std::vector<cv::Point2i> line_corner_points;
-    uc.getLineLimits(image, line_corner_points);
-    for (int i = 0; i < line_corner_points.size(); i++)
+    std::vector<cv::Point2i> lines;
+    uc.getLineLimits(image, lines);
+
+    cv::Mat img_copy;
+    image.copyTo(img_copy);
+    cv::line(img_copy, lines[0], lines[1], cv::Scalar(0,0,255));
+    cv::line(img_copy, lines[1], lines[2], cv::Scalar(0,0,255));
+    cv::line(img_copy, lines[2], lines[3], cv::Scalar(0,0,255));
+    cv::line(img_copy, lines[3], lines[0], cv::Scalar(0,0,255));
+
+    cv::imshow("Lines", img_copy);
+    cv::setMouseCallback("Lines", mouseCallback);
+    LineDecision ld(lines);
+
+    while(cv::waitKey(0) != 27)
     {
-        std::cout << line_corner_points.at(i).x << ", " << line_corner_points.at(i).y << std::endl;
+        int isRight = ld.getDecision(image, ball_center, 0.3);    
+        if (isRight == -1) std::cout << "Left" << std::endl;
+        else if (isRight == 0) std::cout << "On Line" << std::endl;
+        else std::cout << "Right" << std::endl;
     }
+
+
+    
     return 0;
 }

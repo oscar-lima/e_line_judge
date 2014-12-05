@@ -14,10 +14,7 @@ class SurfaceContactDetection
          * @param trajectory
          * Trajectory of the ball in the last x frames (pop should return oldest frame)
          *
-         * @return
-         * -1 if ball is on the left of the line
-         *  0 if ball is on the line
-         *  1 if ball is on the right of the line
+         * @return index of trajectory where a change in direction occurs
          */
         int getTrajectoryChangeIndex(const std::queue<cv::Point2i> &trajectory);
 
