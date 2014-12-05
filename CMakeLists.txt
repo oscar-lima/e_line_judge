@@ -15,6 +15,7 @@ add_executable(e_line_judge
 
 include_directories(e_line_judge
     include/
+    ${OpenCV_INCLUDE_DIRS}
 )
 
 target_link_libraries(e_line_judge

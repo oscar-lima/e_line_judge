@@ -39,5 +39,30 @@ class UserCalibration
          */
         void getLineLimits(const cv::Mat &image, std::vector<cv::Point2i> &line_corner_points);
 
+        /**
+         * Static mouseCallback function
+         */
+        static void mouseCallback(int event, int x, int y, int flags, void *param);
+
+        /**
+         * Actual function that handles the mouse events
+         */
+        void doMouseCallback(int event, int x, int y, int flags);
+
+    private:
+        cv::Point2i ball_center;
+        cv::Point2i bottom_left;
+        cv::Point2i top_left;
+        cv::Point2i top_right;
+        cv::Point2i bottom_right;
+        double ball_radius;
+
+        bool set_center;
+        bool set_radius;
+        bool set_bottom_left;
+        bool set_top_left;
+        bool set_top_right;
+        bool set_bottom_right;
+
 };
 #endif
