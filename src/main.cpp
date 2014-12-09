@@ -23,41 +23,41 @@ int main(int argc, char** argv)
 {
     UserCalibration uc;
     cv::Mat image;
-	int frame_calibration_number;
+    int frame_calibration_number;
     bool slow_motion = false;
     bool live_video = false;
     bool rotate_image = false;
-	
-	//reading example image, uncomment for debugging
+    
+    //reading example image, uncomment for debugging
     //image = cv::imread("../images/big_yellow_ball.jpg");
-	
-	cv::VideoCapture vidCap;
-	
-	if(argc == 1)
-	{
-		std::cout << "Using ball falling on the left video" << std::endl;
-		vidCap = cv::VideoCapture("../data/video/left.MOV");
-	}
-	
-	if(argc > 1)
-	{
-		std::cout << "argv = " << argv[1] << std::endl;
-		
-		if(!strcmp(argv[1], "left"))
-		{
-			std::cout << "Using ball falling on the left video" << std::endl;
-			vidCap = cv::VideoCapture("../data/video/left.MOV");
-		}
-		else if(!strcmp(argv[1], "right"))
-		{
-			std::cout << "Using ball falling on the right video" << std::endl;
-			vidCap = cv::VideoCapture("../data/video/right.MOV");
-		}
-		else if(!strcmp(argv[1], "center"))
-		{
-			std::cout << "Using ball falling on the center video" << std::endl;
-			vidCap = cv::VideoCapture("../data/video/center.MOV");
-		}
+    
+    cv::VideoCapture vidCap;
+    
+    if(argc == 1)
+    {
+        std::cout << "Using ball falling on the left video" << std::endl;
+        vidCap = cv::VideoCapture("../data/video/left.MOV");
+    }
+    
+    if(argc > 1)
+    {
+        std::cout << "argv = " << argv[1] << std::endl;
+        
+        if(!strcmp(argv[1], "left"))
+        {
+            std::cout << "Using ball falling on the left video" << std::endl;
+            vidCap = cv::VideoCapture("../data/video/left.MOV");
+        }
+        else if(!strcmp(argv[1], "right"))
+        {
+            std::cout << "Using ball falling on the right video" << std::endl;
+            vidCap = cv::VideoCapture("../data/video/right.MOV");
+        }
+        else if(!strcmp(argv[1], "center"))
+        {
+            std::cout << "Using ball falling on the center video" << std::endl;
+            vidCap = cv::VideoCapture("../data/video/center.MOV");
+        }
         else if (!strcmp(argv[1], "live"))
         {
             std::cout << "Using live video" << std::endl;
@@ -86,11 +86,11 @@ int main(int argc, char** argv)
         {
             slow_motion = true;
         }
-	}
-	
-	//rotating the image
-	PreProcessing pp;
-	
+    }
+    
+    //rotating the image
+    PreProcessing pp;
+    
     if (!live_video)
     {
         frame_calibration_number = uc.getBallFrameEstimate();
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
         {
             vidCap >> image;
         }
-	    vidCap.set(CV_CAP_PROP_POS_AVI_RATIO, 0);
+        vidCap.set(CV_CAP_PROP_POS_AVI_RATIO, 0);
     }
     else
     {
@@ -110,22 +110,22 @@ int main(int argc, char** argv)
     if (rotate_image)
     {
         std::cout << "Rotating and resizing video to: 360x640" << std::endl;
-	    pp.rotateImage(image, 360, 640);
+        pp.rotateImage(image, 360, 640);
     }
-	
-	std::cout << "Showing calibration frame" << std::endl;
-	
-	//get HSV range for the ball to calibrate
+    
+    std::cout << "Showing calibration frame" << std::endl;
+    
+    //get HSV range for the ball to calibrate
     cv::Scalar lower_range;
     cv::Scalar upper_range;
     double radius_estimate;
     uc.getBallHSVRange(image, lower_range, upper_range, radius_estimate, false);
-	
-	//get line coordinates
+    
+    //get line coordinates
     std::vector<cv::Point2i> lines;
     uc.getLineLimits(image, lines);
 
-	//Displaying the input lines
+    //Displaying the input lines
     /*
     cv::Mat img_copy;
     image.copyTo(img_copy);
@@ -133,70 +133,70 @@ int main(int argc, char** argv)
     cv::line(img_copy, lines[1], lines[2], cv::Scalar(0,0,255));
     cv::line(img_copy, lines[2], lines[3], cv::Scalar(0,0,255));
     cv::line(img_copy, lines[3], lines[0], cv::Scalar(0,0,255));
-	cv::imshow("Lines", img_copy);
+    cv::imshow("Lines", img_copy);
     */
 
     uc.setDisplay("Starting Electronic Line Judge...");
 
     //tracking the ball
     //restarting the video capture to frame 0
-	
-	//creating instance of tracking class
-	BallDetection bd(lower_range, upper_range, radius_estimate);
-	cv::Point2i ball_center;
-	LineDecision ld(lines);
-	int decision_result = 0;
-	double ball_radius;
-	
-	std::queue<cv::Point2i> ball_center_queue;
-	SurfaceContactDetection scd;
-	cv::Point2i previous_ball_center(0.0, 0.0); 
+    
+    //creating instance of tracking class
+    BallDetection bd(lower_range, upper_range, radius_estimate);
+    cv::Point2i ball_center;
+    LineDecision ld(lines);
+    int decision_result = 0;
+    double ball_radius;
+    
+    std::queue<cv::Point2i> ball_center_queue;
+    SurfaceContactDetection scd;
+    cv::Point2i previous_ball_center(0.0, 0.0); 
 
     bool made_decision = false;
-	
-	while (true) 
-	{
-		// Read a video frame
-		vidCap >> image;
+    
+    while (true) 
+    {
+        // Read a video frame
+        vidCap >> image;
 
-		if(!image.empty())
-		{
-			//rotating frame
+        if(!image.empty())
+        {
+            //rotating frame
             if (rotate_image)
             {
-			    pp.rotateImage(image, 360, 640);
+                pp.rotateImage(image, 360, 640);
             }
-			
-			//do stuff
-			if(bd.detect_ball(image, ball_center, ball_radius))
-			{
-				//after detection of the ball, print its value on y
-				//std::cout << "ball y coordinate : " << ball_center.y << std::endl;
-				
-				//drawing detected circles
-				// circle center
-				cv::circle(image, ball_center, 3, cv::Scalar(0,255,0), -1, 8, 0);
-				// circle outline
-				cv::circle(image, ball_center, ball_radius, cv::Scalar(0,0,255), 3, 8, 0);
-				
-				if(!made_decision && scd.hasTrayectoryChanged(previous_ball_center.y, ball_center.y))
-				{
-					//testing the line decision, uncomment for debugging
+            
+            //do stuff
+            if(bd.detect_ball(image, ball_center, ball_radius))
+            {
+                //after detection of the ball, print its value on y
+                //std::cout << "ball y coordinate : " << ball_center.y << std::endl;
+                
+                //drawing detected circles
+                // circle center
+                cv::circle(image, ball_center, 3, cv::Scalar(0,255,0), -1, 8, 0);
+                // circle outline
+                cv::circle(image, ball_center, ball_radius, cv::Scalar(0,0,255), 3, 8, 0);
+                
+                if(!made_decision && scd.hasTrayectoryChanged(previous_ball_center.y, ball_center.y))
+                {
+                    //testing the line decision, uncomment for debugging
                     cv::Point2i projected_ball_center = ball_center;
                     projected_ball_center.y += ball_radius;
-				    cv::circle(image, projected_ball_center, 3, cv::Scalar(255,0,0), -1, 8, 0);
-					decision_result = ld.getDecision(image, projected_ball_center, ball_radius);    
-					if(decision_result == -1) 
-					{
+                    cv::circle(image, projected_ball_center, 3, cv::Scalar(255,0,0), -1, 8, 0);
+                    decision_result = ld.getDecision(image, projected_ball_center, ball_radius);    
+                    if(decision_result == -1) 
+                    {
                         uc.setDisplay("Decision: LEFT");
-						std::cout << "Left" << std::endl;
+                        std::cout << "Left" << std::endl;
                         if (!live_video)
                         {
                             made_decision = true;
                         }
-					}
-					else if(decision_result == 0)
-					{
+                    }
+                    else if(decision_result == 0)
+                    {
                         if (live_video)
                         {
                             uc.setDisplay("Decision: LEFT");
@@ -211,43 +211,43 @@ int main(int argc, char** argv)
                         {
                             made_decision = true;
                         }
-					}
-					else
-					{
+                    }
+                    else
+                    {
                         uc.setDisplay("Decision: RIGHT");
-						std::cout << "Right" << std::endl;
+                        std::cout << "Right" << std::endl;
                         if (!live_video)
                         {
                             made_decision = true;
                         }
-					}
-				}
-				previous_ball_center = ball_center;
-			}
-			
+                    }
+                }
+                previous_ball_center = ball_center;
+            }
+            
             cv::line(image, lines[0], lines[1], cv::Scalar(0,0,255));
             cv::line(image, lines[1], lines[2], cv::Scalar(0,0,255));
             cv::line(image, lines[2], lines[3], cv::Scalar(0,0,255));
             cv::line(image, lines[3], lines[0], cv::Scalar(0,0,255));
-			cv::imshow("Ball detection", image);
-			
-			// Quit the loop when a key is pressed, also give a delay on the video
+            cv::imshow("Ball detection", image);
+            
+            // Quit the loop when a key is pressed, also give a delay on the video
             int wait_time = 5;
             if (slow_motion)
             {
                 wait_time = 500;
             }
-			int keyPressed = cv::waitKey(wait_time);
-			if (keyPressed != -1) break;
-		}
-		else
-		{
-			vidCap.set(CV_CAP_PROP_POS_AVI_RATIO , 0);
-			std::cout << "Reached end of video, playing again" << std::endl; 
+            int keyPressed = cv::waitKey(wait_time);
+            if (keyPressed != -1) break;
+        }
+        else
+        {
+            vidCap.set(CV_CAP_PROP_POS_AVI_RATIO , 0);
+            std::cout << "Reached end of video, playing again" << std::endl; 
             uc.setDisplay("Starting Electronic Line Judge...");
             made_decision = false;
-		}
-	}
-	
+        }
+    }
+    
     return 0;
 }

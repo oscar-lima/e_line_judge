@@ -3,17 +3,17 @@
 
 PreProcessing::PreProcessing()
 {
-	
+    
 }
 
 PreProcessing::~PreProcessing()
 {
-	
+    
 }
 
 void PreProcessing::rotateImage(cv::Mat &image, int width, int height)
 {
-	cv::transpose(image, image);
+    cv::transpose(image, image);
     cv::flip(image, image, 1);
-	cv::resize(image, image, cv::Size(width, height));
+    cv::resize(image, image, cv::Size(width, height));
 }

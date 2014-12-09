@@ -96,14 +96,14 @@ void UserCalibration::getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_ra
      * We also need some type of status window that gives instructions instead of std::cout */
     cv::namedWindow("Ball Calibration", cv::WINDOW_AUTOSIZE);
     cv::setMouseCallback("Ball Calibration", mouseCallback, this);
-	cv::imshow("Ball Calibration", image);
-	
-	bool satisfied = false;
-	
-	std::cout << "Starting ball calibration" << std::endl;    
-	
-	do
-	{
+    cv::imshow("Ball Calibration", image);
+    
+    bool satisfied = false;
+    
+    std::cout << "Starting ball calibration" << std::endl;    
+    
+    do
+    {
         setDisplay("Click center of the ball");
         while (!set_center)
         {
@@ -114,15 +114,15 @@ void UserCalibration::getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_ra
         {
             cv::waitKey(30);
         }
-		
-		//drawing circle around the clicked ball
-		/** Maybe loop here asking the user whether they are satisfied with the circle */
-		cv::Mat display_image;
-		image.copyTo(display_image);
-		cv::circle(display_image, ball_center, ball_radius, cv::Scalar(0,0,255));
-		cv::imshow("Circle", display_image);
+        
+        //drawing circle around the clicked ball
+        /** Maybe loop here asking the user whether they are satisfied with the circle */
+        cv::Mat display_image;
+        image.copyTo(display_image);
+        cv::circle(display_image, ball_center, ball_radius, cv::Scalar(0,0,255));
+        cv::imshow("Circle", display_image);
         cv::waitKey(30);
-		
+        
         setDisplayQuestion("Is the circle fully inside the ball?", "yes", "no");
         answer_received = false;
         while(!answer_received)
@@ -130,68 +130,68 @@ void UserCalibration::getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_ra
             cv::waitKey(30);
         }
         /*
-		//checkin with user if he is satisfied with the clicked region
-		char answer = 'n';
-		std::cout << "Is the circle fully inside the ball? (n/y) : " << std::endl;
-		try
-		{
-			std::cin >> answer;
-			std::cout << "Answer was : " << answer << std::endl;
-		}
-		catch(...)
-		{
-			std::cout << "Error while reading answer" << std::endl;
-		}
-		
-		if(answer == 'y')
-		{
-			satisfied = true;
-		}
-		else
-		{
-			satisfied = false;
-			set_center = false;
-			set_radius = false;
-		} */
-        if (is_satisfied)
+        //checkin with user if he is satisfied with the clicked region
+        char answer = 'n';
+        std::cout << "Is the circle fully inside the ball? (n/y) : " << std::endl;
+        try
         {
-			satisfied = true;
+            std::cin >> answer;
+            std::cout << "Answer was : " << answer << std::endl;
+        }
+        catch(...)
+        {
+            std::cout << "Error while reading answer" << std::endl;
+        }
+        
+        if(answer == 'y')
+        {
+            satisfied = true;
         }
         else
         {
-			satisfied = false;
-			set_center = false;
-			set_radius = false;
+            satisfied = false;
+            set_center = false;
+            set_radius = false;
+        } */
+        if (is_satisfied)
+        {
+            satisfied = true;
+        }
+        else
+        {
+            satisfied = false;
+            set_center = false;
+            set_radius = false;
             answer_received = false;
         }
-		cv::destroyWindow("Circle");
-	}
-	while(!satisfied);
+        cv::destroyWindow("Circle");
+    }
+    while(!satisfied);
 
     radius = ball_radius; 
-	
-	cv::destroyWindow("Ball Calibration");
+    
+    cv::destroyWindow("Ball Calibration");
     cv::Mat empty_image = cv::Mat::zeros(image.rows, image.cols, CV_8UC1);
     cv::circle(empty_image, ball_center, ball_radius, cv::Scalar(255,255,255), -1);
     cv::Mat region_of_interest;
     cv::bitwise_and(image, image, region_of_interest, empty_image);
     
-	if(debug)
-	{
-		cv::imshow("roi", region_of_interest);
-		cv::waitKey(0);
-		cv::destroyWindow("roi");
-	}
+    if(debug)
+    {
+        cv::imshow("roi", region_of_interest);
+        cv::waitKey(0);
+        cv::destroyWindow("roi");
+    }
     
     cv::Mat hsv_image;
     cv::cvtColor(region_of_interest, hsv_image, CV_BGR2HSV);
     
-	if(debug)
-	{
-		cv::imshow("hsvroi", hsv_image);
-		cv::waitKey(0);
-		cv::destroyWindow("hsvroi");
-	}
+    if(debug)
+    {
+        cv::imshow("hsvroi", hsv_image);
+        cv::waitKey(0);
+        cv::destroyWindow("hsvroi");
+    }
 
     int min_h = 256;
     int min_s = 256;
@@ -227,20 +227,20 @@ void UserCalibration::getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_ra
 
 int UserCalibration::getBallFrameEstimate()
 {
-	int frame_number = 0;
-	
-	std::cout << "Please provide with a frame estimate (number) in which the ball appears in the FOV of the camera" << std::endl;
-	try
-	{
-		std::cin >> frame_number;
-		std::cout << "Skipping to frame number : " << frame_number << std::endl;
-		return frame_number;
-	}
-	catch(...)
-	{
-		std::cout << "Error while reading input integer" << std::endl;
-		return 0;
-	}
+    int frame_number = 0;
+    
+    std::cout << "Please provide with a frame estimate (number) in which the ball appears in the FOV of the camera" << std::endl;
+    try
+    {
+        std::cin >> frame_number;
+        std::cout << "Skipping to frame number : " << frame_number << std::endl;
+        return frame_number;
+    }
+    catch(...)
+    {
+        std::cout << "Error while reading input integer" << std::endl;
+        return 0;
+    }
 }
 
 void UserCalibration::getLineLimits(const cv::Mat &image, std::vector<cv::Point2i> &line_corner_points)
@@ -249,9 +249,9 @@ void UserCalibration::getLineLimits(const cv::Mat &image, std::vector<cv::Point2
     cv::setMouseCallback("Line Calibration", mouseCallback, this);
     cv::imshow("Line Calibration", image);
 
-	std::cout << "Starting line calibration" << std::endl;
+    std::cout << "Starting line calibration" << std::endl;
     bool satisfied =  false;
-	
+    
     do
     {
         setDisplay("Click bottom left corner of line");
@@ -298,11 +298,11 @@ void UserCalibration::getLineLimits(const cv::Mat &image, std::vector<cv::Point2
         }
         if (is_satisfied)
         {
-			satisfied = true;
+            satisfied = true;
         }
         else
         {
-			satisfied = false;
+            satisfied = false;
             set_bottom_left = false;
             set_top_left = false;
             set_top_right = false;
