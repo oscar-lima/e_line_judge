@@ -24,7 +24,7 @@ class UserCalibration
          * This variable is modified in place
          * 
          */
-        void getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_range, cv::Scalar &upper_range);
+        void getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_range, cv::Scalar &upper_range, bool debug);
 
         /**
          * Asks user to specify the limits of the line (by four mouse clicks) and returns the points
@@ -48,6 +48,12 @@ class UserCalibration
          * Actual function that handles the mouse events
          */
         void doMouseCallback(int event, int x, int y, int flags);
+		
+		/**
+         * Ask user for integer input information with frame number in which the ball appears in the FOV of the camera
+		 * for calibration purposes
+         */
+		int getBallFrameEstimate();
 
     private:
         cv::Point2i ball_center;

@@ -8,7 +8,14 @@ SurfaceContactDetection::~SurfaceContactDetection()
 {
 }
 
-int SurfaceContactDetection::getTrajectoryChangeIndex(const std::queue<cv::Point2i> &trajectory)
+bool SurfaceContactDetection::hasTrayectoryChanged(int previous_y_position, int current_y_position)
 {
-    return 0;
+	if((previous_y_position - current_y_position) > 0)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

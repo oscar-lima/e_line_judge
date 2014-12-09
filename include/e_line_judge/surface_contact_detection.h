@@ -11,12 +11,15 @@ class SurfaceContactDetection
         virtual ~SurfaceContactDetection();
 
         /**
-         * @param trajectory
-         * Trajectory of the ball in the last x frames (pop should return oldest frame)
+         * @param previous_y_position
+         * Previous ball y center of the ball values expressed in pixels
+		 * 
+		 * @param current_y_position
+		 * Current ball y center of the ball value expressed in pixels
          *
-         * @return index of trajectory where a change in direction occurs
+         * @return boolean that states if there is a change in the trajectory
          */
-        int getTrajectoryChangeIndex(const std::queue<cv::Point2i> &trajectory);
+        bool hasTrayectoryChanged(int previous_y_position, int current_y_position);
 
 };
 

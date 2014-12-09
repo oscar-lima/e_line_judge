@@ -2,6 +2,8 @@
 #define BALL_DETECTION_H_
 
 #include <opencv2/core/core.hpp>
+#include <opencv2/opencv.hpp>
+
 class BallDetection
 {
     public:
@@ -28,6 +30,13 @@ class BallDetection
          *
          * @return true if ball has been detected
          */
+		
         bool detect_ball(const cv::Mat &image, cv::Point2i &ball_center, double &radius);        
+	
+	private:
+	
+		cv::Scalar hsv_min, hsv_max;
+		//vector for saving the circles
 };
 #endif
+

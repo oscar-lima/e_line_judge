@@ -11,6 +11,7 @@ add_executable(e_line_judge
     src/line_decision.cpp
     src/surface_contact_detection.cpp
     src/user_calibration.cpp
+    src/pre_processing.cpp
 )
 
 include_directories(e_line_judge
