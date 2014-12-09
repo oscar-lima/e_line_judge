@@ -14,7 +14,7 @@ class BallDetection
          * @param upper_range
          * Upper range of HSV values defining the colour of the ball
          */
-        BallDetection(const cv::Scalar &lower_range, const cv::Scalar &upper_range);
+        BallDetection(const cv::Scalar &lower_range, const cv::Scalar &upper_range, double radius_estimate);
 
         virtual ~BallDetection();
 
@@ -36,7 +36,8 @@ class BallDetection
 	private:
 	
 		cv::Scalar hsv_min, hsv_max;
-		//vector for saving the circles
+        double radius_estimate_;
+
 };
 #endif
 

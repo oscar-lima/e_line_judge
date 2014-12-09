@@ -90,7 +90,7 @@ void UserCalibration::doMouseCallback(int event, int x, int y, int flags)
     }
 }
 
-void UserCalibration::getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_range, cv::Scalar &upper_range, bool debug)
+void UserCalibration::getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_range, cv::Scalar &upper_range, double &radius, bool debug)
 {
     /** waitKey needs to be changed so it waits for a mouse event
      * We also need some type of status window that gives instructions instead of std::cout */
@@ -167,6 +167,8 @@ void UserCalibration::getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_ra
 		cv::destroyWindow("Circle");
 	}
 	while(!satisfied);
+
+    radius = ball_radius; 
 	
 	cv::destroyWindow("Ball Calibration");
     cv::Mat empty_image = cv::Mat::zeros(image.rows, image.cols, CV_8UC1);
@@ -220,6 +222,7 @@ void UserCalibration::getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_ra
     lower_range = cv::Scalar(min_h, min_s, min_v);
     upper_range = cv::Scalar(max_h, max_s, max_v);
     std::cout << "Range: " << lower_range <<", " << upper_range << std::endl;
+    std::cout << "Radius: " << radius << std::endl;
 }
 
 int UserCalibration::getBallFrameEstimate()

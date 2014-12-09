@@ -1,9 +1,10 @@
 #include <e_line_judge/ball_detection.h>
 
-BallDetection::BallDetection(const cv::Scalar &lower_range, const cv::Scalar &upper_range)
+BallDetection::BallDetection(const cv::Scalar &lower_range, const cv::Scalar &upper_range, double radius_estimate)
 {
 	hsv_min = lower_range;
 	hsv_max = upper_range;
+    radius_estimate_ = radius_estimate;
 	std::cout << "Start detection system" << std::endl;
 }
 
@@ -24,10 +25,15 @@ bool BallDetection::detect_ball(const cv::Mat &image, cv::Point2i &ball_center, 
 	
 	//orange color detection
 	cv::inRange(hsv_image, hsv_min, hsv_max, hsv_image);
+//    cv::imshow("before blur", hsv_image);
+//    cv::waitKey(30);
 	
 	//filter noise
-	cv::GaussianBlur(hsv_image, hsv_image, cv::Size(9, 9), 2, 2 );
+//	cv::GaussianBlur(hsv_image, hsv_image, cv::Size(9, 9), 2, 2 );
+	cv::medianBlur(hsv_image, hsv_image,13);
 	
+//    cv::imshow("blur", hsv_image);
+//    cv::waitKey(30);
 	//Apply the Hough Transform to find the circles
 	cv::HoughCircles(hsv_image, circles, CV_HOUGH_GRADIENT, 2, hsv_image.rows/4, 100, 40, 20, 200);
 	

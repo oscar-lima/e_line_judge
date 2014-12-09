@@ -24,7 +24,7 @@ class UserCalibration
          * This variable is modified in place
          * 
          */
-        void getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_range, cv::Scalar &upper_range, bool debug);
+        void getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_range, cv::Scalar &upper_range, double &radius, bool debug);
 
         /**
          * Asks user to specify the limits of the line (by four mouse clicks) and returns the points
