@@ -43,17 +43,24 @@ class UserCalibration
          * Static mouseCallback function
          */
         static void mouseCallback(int event, int x, int y, int flags, void *param);
+        static void displayMouseCallback(int event, int x, int y, int flags, void *param);
 
         /**
          * Actual function that handles the mouse events
          */
         void doMouseCallback(int event, int x, int y, int flags);
+
+        void doDisplayMouseCallback(int event, int x, int y, int flags);
 		
 		/**
          * Ask user for integer input information with frame number in which the ball appears in the FOV of the camera
 		 * for calibration purposes
          */
 		int getBallFrameEstimate();
+        void setDisplay(const std::string &text);
+
+    private:
+        void setDisplayQuestion(const std::string &text, const std::string &option1, const std::string &option2);
 
     private:
         cv::Point2i ball_center;
@@ -69,6 +76,9 @@ class UserCalibration
         bool set_top_left;
         bool set_top_right;
         bool set_bottom_right;
+        bool answer_received;
+        char is_satisfied;
+        cv::Mat display;
 
 };
 #endif

@@ -1,6 +1,7 @@
 #include <e_line_judge/user_calibration.h>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <unistd.h>
 #include <iostream>
 
 void UserCalibration::mouseCallback(int event, int x, int y, int flags, void *param)
@@ -9,15 +10,44 @@ void UserCalibration::mouseCallback(int event, int x, int y, int flags, void *pa
     this_obj->doMouseCallback(event, x, y, flags);
 }
 
-UserCalibration::UserCalibration() : set_center(false), set_radius(false), set_bottom_left(false), set_top_left(false),
-                                     set_top_right(false), set_bottom_right(false)
+void UserCalibration::displayMouseCallback(int event, int x, int y, int flags, void *param)
 {
+    UserCalibration *this_obj = static_cast<UserCalibration*>(param);
+    this_obj->doDisplayMouseCallback(event, x, y, flags);
+}
+
+UserCalibration::UserCalibration() : set_center(false), set_radius(false), set_bottom_left(false), set_top_left(false),
+                                     set_top_right(false), set_bottom_right(false), answer_received(false), is_satisfied(false)
+{
+    display = cv::Mat::zeros(250,250,CV_8UC3);
+    cv::imshow("Display", display);
+    cv::setMouseCallback("Display", displayMouseCallback, this);
 }
 
 UserCalibration::~UserCalibration()
-{
-
+{    
 }
+
+void UserCalibration::doDisplayMouseCallback(int event, int x, int y, int flags)
+{
+    if (event == CV_EVENT_LBUTTONDOWN)
+    {
+        if (!answer_received)
+        {
+            if (x > 10 && x < 100 && y > 30 && y < 45)
+            {
+                is_satisfied = true; 
+                answer_received = true;
+            }
+            if (x > 150 && x < 240 && y > 30 && y < 45)
+            {
+                is_satisfied = false;
+                answer_received = true;
+            }
+        }
+    }
+}
+
 void UserCalibration::doMouseCallback(int event, int x, int y, int flags)
 {
     if (event == CV_EVENT_LBUTTONDOWN)
@@ -70,14 +100,20 @@ void UserCalibration::getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_ra
 	
 	bool satisfied = false;
 	
-	std::cout << "Starting ball calibration" << std::endl;
+	std::cout << "Starting ball calibration" << std::endl;    
 	
 	do
 	{
-		std::cout << "Click center of the ball" << std::endl;
-		cv::waitKey(0);
-		std::cout << "Click any edge of the ball" << std::endl;
-		cv::waitKey(0);
+        setDisplay("Click center of the ball");
+        while (!set_center)
+        {
+            cv::waitKey(30);
+        }
+        setDisplay("Click any edge of the ball");
+        while(!set_radius)
+        {
+            cv::waitKey(30);
+        }
 		
 		//drawing circle around the clicked ball
 		/** Maybe loop here asking the user whether they are satisfied with the circle */
@@ -85,9 +121,15 @@ void UserCalibration::getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_ra
 		image.copyTo(display_image);
 		cv::circle(display_image, ball_center, ball_radius, cv::Scalar(0,0,255));
 		cv::imshow("Circle", display_image);
-		cv::waitKey(0);
-		cv::destroyWindow("Circle");
+        cv::waitKey(30);
 		
+        setDisplayQuestion("Is the circle fully inside the ball?", "yes", "no");
+        answer_received = false;
+        while(!answer_received)
+        {
+            cv::waitKey(30);
+        }
+        /*
 		//checkin with user if he is satisfied with the clicked region
 		char answer = 'n';
 		std::cout << "Is the circle fully inside the ball? (n/y) : " << std::endl;
@@ -110,8 +152,19 @@ void UserCalibration::getBallHSVRange(const cv::Mat &image, cv::Scalar &lower_ra
 			satisfied = false;
 			set_center = false;
 			set_radius = false;
-		}
-		
+		} */
+        if (is_satisfied)
+        {
+			satisfied = true;
+        }
+        else
+        {
+			satisfied = false;
+			set_center = false;
+			set_radius = false;
+            answer_received = false;
+        }
+		cv::destroyWindow("Circle");
 	}
 	while(!satisfied);
 	
@@ -194,30 +247,84 @@ void UserCalibration::getLineLimits(const cv::Mat &image, std::vector<cv::Point2
     cv::imshow("Line Calibration", image);
 
 	std::cout << "Starting line calibration" << std::endl;
+    bool satisfied =  false;
 	
-    std::cout << "Click bottom left corner of line, after that press a key" << std::endl;
-    cv::waitKey(0);
-    std::cout << "Click top left corner of line, after that press a key" << std::endl;
-    cv::waitKey(0);
-    std::cout << "Click top right corner of line, after that press a key" << std::endl;
-    cv::waitKey(0);
-    std::cout << "Click bottom right corner of line, after that press a key" << std::endl;
-    cv::waitKey(0);
-    cv::destroyWindow("Line Calibration");
+    do
+    {
+        setDisplay("Click bottom left corner of line");
+        while(!set_bottom_left)
+        {
+            cv::waitKey(30);
+        }
+        setDisplay("Click top left corner of line");
+        while(!set_top_left)
+        {
+            cv::waitKey(30);
+        }
+        setDisplay("Click top right corner of line");
+        while(!set_top_right)
+        {
+            cv::waitKey(30);
+        }
+        setDisplay("Click bottom right corner of line");
+        while(!set_bottom_right)
+        {
+            cv::waitKey(30);
+        }
+        cv::destroyWindow("Line Calibration");
 
-    // TODO: actually check that these points are set
-    line_corner_points.push_back(bottom_left);
-    line_corner_points.push_back(top_left);
-    line_corner_points.push_back(top_right);
-    line_corner_points.push_back(bottom_right);
+        // TODO: actually check that these points are set
+        line_corner_points.push_back(bottom_left);
+        line_corner_points.push_back(top_left);
+        line_corner_points.push_back(top_right);
+        line_corner_points.push_back(bottom_right);
 
-    cv::Mat display_image;
-    image.copyTo(display_image);
-    cv::line(display_image, bottom_left, top_left, cv::Scalar(0,0,255));
-    cv::line(display_image, top_left, top_right, cv::Scalar(0,0,255));
-    cv::line(display_image, top_right, bottom_right, cv::Scalar(0,0,255));
-    cv::line(display_image, bottom_right, bottom_left, cv::Scalar(0,0,255));
-    cv::imshow("lines", display_image);
-    cv::waitKey(0);
-    cv::destroyWindow("lines");
+        cv::Mat display_image;
+        image.copyTo(display_image);
+        cv::line(display_image, bottom_left, top_left, cv::Scalar(0,0,255));
+        cv::line(display_image, top_left, top_right, cv::Scalar(0,0,255));
+        cv::line(display_image, top_right, bottom_right, cv::Scalar(0,0,255));
+        cv::line(display_image, bottom_right, bottom_left, cv::Scalar(0,0,255));
+        cv::imshow("lines", display_image);
+        cv::waitKey(30);
+        setDisplayQuestion("Are you satisfied with the calibration?", "yes", "no");
+        answer_received = false;
+        while(!answer_received)
+        {
+            cv::waitKey(30);
+        }
+        if (is_satisfied)
+        {
+			satisfied = true;
+        }
+        else
+        {
+			satisfied = false;
+            set_bottom_left = false;
+            set_top_left = false;
+            set_top_right = false;
+            set_bottom_right = false;
+            answer_received = false;
+        }
+        cv::destroyWindow("lines");
+    }while(!satisfied);
+    setDisplay("Calibration done");
+}
+
+void UserCalibration::setDisplay(const std::string &text)
+{    
+    display = cv::Mat::zeros(50,300,CV_8UC3);
+    cv::putText(display, text, cv::Point(5,25), CV_FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,255),1,8,false);
+    cv::imshow("Display", display);
+}
+
+void UserCalibration::setDisplayQuestion(const std::string &text, const std::string &option1, const std::string &option2)
+{
+    display = cv::Mat::zeros(50,350,CV_8UC3);
+    cv::putText(display, text, cv::Point(5,25), CV_FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,255),1,8,false);
+    cv::putText(display, option1, cv::Point(30,40), CV_FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,255),1,8,false);
+    cv::putText(display, option2, cv::Point(170,40), CV_FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0,0,255),1,8,false);
+    cv::rectangle(display, cv::Point(10,30), cv::Point(100,45), cv::Scalar(0,0,255),1);
+    cv::rectangle(display, cv::Point(150,30), cv::Point(240,45), cv::Scalar(0,0,255),1);
+    cv::imshow("Display", display);
 }

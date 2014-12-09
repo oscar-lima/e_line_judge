@@ -24,6 +24,7 @@ int main(int argc, char** argv)
     UserCalibration uc;
     cv::Mat image;
 	int frame_calibration_number;
+    bool slow_motion = false;
 	
 	//reading example image, uncomment for debugging
     //image = cv::imread("../images/big_yellow_ball.jpg");
@@ -55,6 +56,11 @@ int main(int argc, char** argv)
 			std::cout << "Using ball falling on the center video" << std::endl;
 			vidCap = cv::VideoCapture("../data/video/center.MOV");
 		}
+
+        if(argc > 2)
+        {
+            slow_motion = true;
+        }
 	}
 	
 	//rotating the image
@@ -81,6 +87,7 @@ int main(int argc, char** argv)
     uc.getLineLimits(image, lines);
 
 	//Displaying the input lines
+    /*
     cv::Mat img_copy;
     image.copyTo(img_copy);
     cv::line(img_copy, lines[0], lines[1], cv::Scalar(0,0,255));
@@ -88,6 +95,9 @@ int main(int argc, char** argv)
     cv::line(img_copy, lines[2], lines[3], cv::Scalar(0,0,255));
     cv::line(img_copy, lines[3], lines[0], cv::Scalar(0,0,255));
 	cv::imshow("Lines", img_copy);
+    */
+
+    uc.setDisplay("Starting Electronic Line Judge...");
 
     //tracking the ball
     //restarting the video capture to frame 0
@@ -103,6 +113,8 @@ int main(int argc, char** argv)
 	std::queue<cv::Point2i> ball_center_queue;
 	SurfaceContactDetection scd;
 	cv::Point2i previous_ball_center(0.0, 0.0); 
+
+    bool made_decision = false;
 	
 	while (true) 
 	{
@@ -126,21 +138,27 @@ int main(int argc, char** argv)
 				// circle outline
 				cv::circle(image, ball_center, ball_radius, cv::Scalar(0,0,255), 3, 8, 0);
 				
-				if(scd.hasTrayectoryChanged(previous_ball_center.y, ball_center.y))
+				if(!made_decision && scd.hasTrayectoryChanged(previous_ball_center.y, ball_center.y))
 				{
 					//testing the line decision, uncomment for debugging
 					decision_result = ld.getDecision(image, ball_center, ball_radius);    
 					if(decision_result == -1) 
 					{
+                        uc.setDisplay("Decision: LEFT");
 						std::cout << "Left" << std::endl;
+                        made_decision = true;
 					}
 					else if(decision_result == 0)
 					{
+                        uc.setDisplay("Decision: ON LINE");
 						std::cout << "On Line" << std::endl;
+                        made_decision = true;
 					}
 					else
 					{
+                        uc.setDisplay("Decision: RIGHT");
 						std::cout << "Right" << std::endl;
+                        made_decision = true;
 					}
 				}
 				previous_ball_center = ball_center;
@@ -149,13 +167,19 @@ int main(int argc, char** argv)
 			cv::imshow("Ball detection", image);
 			
 			// Quit the loop when a key is pressed, also give a delay on the video
-			int keyPressed = cv::waitKey(5);
+            int wait_time = 5;
+            if (slow_motion)
+            {
+                wait_time = 100;
+            }
+			int keyPressed = cv::waitKey(wait_time);
 			if (keyPressed != -1) break;
 		}
 		else
 		{
 			vidCap.set(CV_CAP_PROP_POS_AVI_RATIO , 0);
 			std::cout << "Reached end of video, playing again" << std::endl; 
+            made_decision = false;
 		}
 	}
 	
