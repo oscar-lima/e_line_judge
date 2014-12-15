@@ -274,7 +274,6 @@ void UserCalibration::getLineLimits(const cv::Mat &image, std::vector<cv::Point2
         {
             cv::waitKey(30);
         }
-        cv::destroyWindow("Line Calibration");
 
         // TODO: actually check that these points are set
         line_corner_points.push_back(bottom_left);
@@ -311,6 +310,7 @@ void UserCalibration::getLineLimits(const cv::Mat &image, std::vector<cv::Point2
         }
         cv::destroyWindow("lines");
     }while(!satisfied);
+    cv::destroyWindow("Line Calibration");
     setDisplay("Calibration done");
 }
 

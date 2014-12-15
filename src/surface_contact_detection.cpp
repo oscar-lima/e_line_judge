@@ -9,7 +9,7 @@ SurfaceContactDetection::~SurfaceContactDetection()
 }
 
 bool SurfaceContactDetection::hasTrayectoryChanged(int previous_y_position, int current_y_position)
-{
+{    
     if((previous_y_position - current_y_position) > 0)
     {
         return true;

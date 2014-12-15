@@ -26,7 +26,8 @@ int main(int argc, char** argv)
     int frame_calibration_number;
     bool slow_motion = false;
     bool live_video = false;
-    bool rotate_image = false;
+    bool rotate_image = true;
+    bool hardcoded_calibration = true;
     
     //reading example image, uncomment for debugging
     //image = cv::imread("../images/big_yellow_ball.jpg");
@@ -81,7 +82,7 @@ int main(int argc, char** argv)
                 std::cout << "Specify a filename " << std::endl;
                 exit(0);
             }
-        }
+        } 
         if(argc > 3)
         {
             slow_motion = true;
@@ -119,7 +120,16 @@ int main(int argc, char** argv)
     cv::Scalar lower_range;
     cv::Scalar upper_range;
     double radius_estimate;
-    uc.getBallHSVRange(image, lower_range, upper_range, radius_estimate, false);
+    if (!hardcoded_calibration)
+    {
+        uc.getBallHSVRange(image, lower_range, upper_range, radius_estimate, false);
+    }
+    else
+    {
+        lower_range = cv::Scalar(12, 119, 200, 0);
+        upper_range = cv::Scalar(18, 249, 255, 0);
+        radius_estimate = 10.0;
+    }
     
     //get line coordinates
     std::vector<cv::Point2i> lines;
@@ -150,7 +160,8 @@ int main(int argc, char** argv)
     
     std::queue<cv::Point2i> ball_center_queue;
     SurfaceContactDetection scd;
-    cv::Point2i previous_ball_center(0.0, 0.0); 
+    cv::Point2i previous_ball_center(0.0, 0.0);
+    int ball_detection_iteration = 0;
 
     bool made_decision = false;
     
@@ -179,17 +190,29 @@ int main(int argc, char** argv)
                 // circle outline
                 cv::circle(image, ball_center, ball_radius, cv::Scalar(0,0,255), 3, 8, 0);
                 
-                if(!made_decision && scd.hasTrayectoryChanged(previous_ball_center.y, ball_center.y))
+                std::cout << "prev: " << previous_ball_center.y << ", curr: " << ball_center.y << std::endl;
+                if(!made_decision && ball_detection_iteration != 0 && scd.hasTrayectoryChanged(previous_ball_center.y, ball_center.y))
                 {
                     //testing the line decision, uncomment for debugging
                     cv::Point2i projected_ball_center = ball_center;
                     projected_ball_center.y += ball_radius;
                     cv::circle(image, projected_ball_center, 3, cv::Scalar(255,0,0), -1, 8, 0);
-                    decision_result = ld.getDecision(image, projected_ball_center, ball_radius);    
+                    decision_result = ld.getDecision(image, projected_ball_center, ball_radius);
+
+                    // result image
+                    cv::Mat result_image;
+                    image.copyTo(result_image);
+                    cv::line(result_image, lines[0], lines[1], cv::Scalar(0,0,255));
+                    cv::line(result_image, lines[1], lines[2], cv::Scalar(0,0,255));
+                    cv::line(result_image, lines[2], lines[3], cv::Scalar(0,0,255));
+                    cv::line(result_image, lines[3], lines[0], cv::Scalar(0,0,255));
+
                     if(decision_result == -1) 
                     {
                         uc.setDisplay("Decision: LEFT");
                         std::cout << "Left" << std::endl;
+                        cv::putText(result_image, "LEFT", cv::Point(5,result_image.rows - 20), 
+                                    CV_FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0,0,255),1,8,false);
                         if (!live_video)
                         {
                             made_decision = true;
@@ -200,11 +223,15 @@ int main(int argc, char** argv)
                         if (live_video)
                         {
                             uc.setDisplay("Decision: LEFT");
+                            cv::putText(result_image, "LEFT", cv::Point(5,result_image.rows - 20), 
+                                    CV_FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0,0,255),1,8,false);
                             std::cout << "Left" << std::endl;
                         }
                         else
                         {
                             uc.setDisplay("Decision: ON LINE");
+                            cv::putText(result_image, "ON LINE", cv::Point(5,result_image.rows - 20), 
+                                    CV_FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0,0,255),1,8,false);
                             std::cout << "On Line" << std::endl;
                         }
                         if (!live_video)
@@ -215,13 +242,17 @@ int main(int argc, char** argv)
                     else
                     {
                         uc.setDisplay("Decision: RIGHT");
+                        cv::putText(result_image, "RIGHT", cv::Point(5,result_image.rows - 20), 
+                                    CV_FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0,0,255),1,8,false);
                         std::cout << "Right" << std::endl;
                         if (!live_video)
                         {
                             made_decision = true;
                         }
                     }
+                    cv::imshow("Result", result_image);
                 }
+                ball_detection_iteration++;
                 previous_ball_center = ball_center;
             }
             
@@ -246,6 +277,10 @@ int main(int argc, char** argv)
             std::cout << "Reached end of video, playing again" << std::endl; 
             uc.setDisplay("Starting Electronic Line Judge...");
             made_decision = false;
+            previous_ball_center.x = 0.0;
+            previous_ball_center.y = 0.0;
+            ball_detection_iteration = 0;
+            cv::destroyWindow("Result");
         }
     }
     

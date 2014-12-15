@@ -31,7 +31,7 @@ class BallDetection
          * @return true if ball has been detected
          */
 		
-        bool detect_ball(const cv::Mat &image, cv::Point2i &ball_center, double &radius);        
+        bool detect_ball(const cv::Mat &image, cv::Point2i &ball_center, double &radius, bool debug=false);        
 	
 	private:
 	

@@ -13,7 +13,7 @@ BallDetection::~BallDetection()
     
 }
 
-bool BallDetection::detect_ball(const cv::Mat &image, cv::Point2i &ball_center, double &ball_radius)
+bool BallDetection::detect_ball(const cv::Mat &image, cv::Point2i &ball_center, double &ball_radius, bool debug)
 {
     cv::Mat hsv_image;
     
@@ -25,15 +25,21 @@ bool BallDetection::detect_ball(const cv::Mat &image, cv::Point2i &ball_center, 
     
     //orange color detection
     cv::inRange(hsv_image, hsv_min, hsv_max, hsv_image);
-//    cv::imshow("before blur", hsv_image);
-//    cv::waitKey(30);
+    if (debug)
+    {
+        cv::imshow("before blur", hsv_image);
+        cv::waitKey(30);
+    }
     
     //filter noise
 //  cv::GaussianBlur(hsv_image, hsv_image, cv::Size(9, 9), 2, 2 );
     cv::medianBlur(hsv_image, hsv_image,13);
     
-//    cv::imshow("blur", hsv_image);
-//    cv::waitKey(30);
+    if (debug)
+    {        
+        cv::imshow("blur", hsv_image);
+        cv::waitKey(30);
+    }
     //Apply the Hough Transform to find the circles
     cv::HoughCircles(hsv_image, circles, CV_HOUGH_GRADIENT, 2, hsv_image.rows/4, 100, 40, 20, 200);
     
