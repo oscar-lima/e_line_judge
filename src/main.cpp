@@ -126,8 +126,10 @@ int main(int argc, char** argv)
     }
     else
     {
-        lower_range = cv::Scalar(12, 119, 200, 0);
-        upper_range = cv::Scalar(18, 249, 255, 0);
+        //lower_range = cv::Scalar(12, 119, 200, 0);
+        //upper_range = cv::Scalar(18, 249, 255, 0);
+		lower_range = cv::Scalar(11, 118, 225, 0);
+		upper_range = cv::Scalar(18, 249, 255, 0);
         radius_estimate = 10.0;
     }
     
@@ -158,7 +160,8 @@ int main(int argc, char** argv)
     int decision_result = 0;
     double ball_radius;
     
-    std::queue<cv::Point2i> ball_center_queue;
+	std::queue<cv::Mat> last_frames;
+	int frames_back = 1; //taking one frame back for the decision after the change in direction has been detected
     SurfaceContactDetection scd;
     cv::Point2i previous_ball_center(0.0, 0.0);
     int ball_detection_iteration = 0;
@@ -169,7 +172,8 @@ int main(int argc, char** argv)
     {
         // Read a video frame
         vidCap >> image;
-
+		cv::Mat image_copy;
+		
         if(!image.empty())
         {
             //rotating frame
@@ -177,6 +181,15 @@ int main(int argc, char** argv)
             {
                 pp.rotateImage(image, 360, 640);
             }
+            
+            //avoiding pushing a pointer (gives runtime error) and pushing a copy instead
+            image.copyTo(image_copy);
+            last_frames.push(image_copy);
+			
+			if(last_frames.size() > frames_back + 1)
+			{
+				last_frames.pop();
+			}
             
             //do stuff
             if(bd.detect_ball(image, ball_center, ball_radius))
@@ -193,19 +206,33 @@ int main(int argc, char** argv)
                 std::cout << "prev: " << previous_ball_center.y << ", curr: " << ball_center.y << std::endl;
                 if(!made_decision && ball_detection_iteration != 0 && scd.hasTrayectoryChanged(previous_ball_center.y, ball_center.y))
                 {
-                    //testing the line decision, uncomment for debugging
-                    cv::Point2i projected_ball_center = ball_center;
-                    projected_ball_center.y += ball_radius;
-                    cv::circle(image, projected_ball_center, 3, cv::Scalar(255,0,0), -1, 8, 0);
-                    decision_result = ld.getDecision(image, projected_ball_center, ball_radius);
+					//taking two frames back
+					cv::Mat decision_frame;
+					last_frames.front().copyTo(decision_frame);
+					
+					//result image will store lines and marked ball with the decision
+					cv::Mat result_image;
+					
+					//detect ball on decision frame
+					if(bd.detect_ball(decision_frame, ball_center, ball_radius))
+					{
+						//testing the line decision, uncomment for debugging
+						cv::Point2i projected_ball_center = ball_center;
+						projected_ball_center.y += ball_radius;
+						cv::circle(decision_frame, projected_ball_center, 3, cv::Scalar(255,0,0), -1, 8, 0);
+						decision_result = ld.getDecision(decision_frame, projected_ball_center, ball_radius);
 
-                    // result image
-                    cv::Mat result_image;
-                    image.copyTo(result_image);
-                    cv::line(result_image, lines[0], lines[1], cv::Scalar(0,0,255));
-                    cv::line(result_image, lines[1], lines[2], cv::Scalar(0,0,255));
-                    cv::line(result_image, lines[2], lines[3], cv::Scalar(0,0,255));
-                    cv::line(result_image, lines[3], lines[0], cv::Scalar(0,0,255));
+						// result image
+						decision_frame.copyTo(result_image);
+						cv::line(result_image, lines[0], lines[1], cv::Scalar(0,0,255));
+						cv::line(result_image, lines[1], lines[2], cv::Scalar(0,0,255));
+						cv::line(result_image, lines[2], lines[3], cv::Scalar(0,0,255));
+						cv::line(result_image, lines[3], lines[0], cv::Scalar(0,0,255));
+					}
+					else
+					{
+						std::cout << "Error : ball does not exist in decision frame" << std::endl;
+					}
 
                     if(decision_result == -1) 
                     {
