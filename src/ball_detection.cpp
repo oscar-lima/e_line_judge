@@ -41,7 +41,7 @@ bool BallDetection::detect_ball(const cv::Mat &image, cv::Point2i &ball_center, 
         cv::waitKey(30);
     }
     //Apply the Hough Transform to find the circles
-    cv::HoughCircles(hsv_image, circles, CV_HOUGH_GRADIENT, 2, hsv_image.rows/4, 100, 40, 20, 200);
+    cv::HoughCircles(hsv_image, circles, CV_HOUGH_GRADIENT, 2, hsv_image.rows/4, 100, 40, 5, 200);
     
     //Detect the largest circle
     double max_radius = 0.0;
