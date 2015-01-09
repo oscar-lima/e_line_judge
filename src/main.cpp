@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     if(argc == 1)
     {
         std::cout << "Using ball falling on the left video" << std::endl;
-        vidCap = cv::VideoCapture("../data/video/left.MOV");
+        vidCap = cv::VideoCapture("../data/video/devel_videos/left.MOV");
     }
     
     if(argc > 1)
@@ -47,17 +47,17 @@ int main(int argc, char** argv)
         if(!strcmp(argv[1], "left"))
         {
             std::cout << "Using ball falling on the left video" << std::endl;
-            vidCap = cv::VideoCapture("../data/video/left.MOV");
+            vidCap = cv::VideoCapture("../data/video/devel_videos/left.MOV");
         }
         else if(!strcmp(argv[1], "right"))
         {
             std::cout << "Using ball falling on the right video" << std::endl;
-            vidCap = cv::VideoCapture("../data/video/right.MOV");
+            vidCap = cv::VideoCapture("../data/video/devel_videos/right.MOV");
         }
         else if(!strcmp(argv[1], "center"))
         {
             std::cout << "Using ball falling on the center video" << std::endl;
-            vidCap = cv::VideoCapture("../data/video/center.MOV");
+            vidCap = cv::VideoCapture("../data/video/devel_videos/center.MOV");
         }
         else if (!strcmp(argv[1], "live"))
         {
@@ -197,12 +197,6 @@ int main(int argc, char** argv)
                 //after detection of the ball, print its value on y
                 //std::cout << "ball y coordinate : " << ball_center.y << std::endl;
                 
-                //drawing detected circles
-                // circle center
-                cv::circle(image, ball_center, 3, cv::Scalar(0,255,0), -1, 8, 0);
-                // circle outline
-                cv::circle(image, ball_center, ball_radius, cv::Scalar(0,0,255), 3, 8, 0);
-                
                 std::cout << "prev: " << previous_ball_center.y << ", curr: " << ball_center.y << std::endl;
                 if(!made_decision && ball_detection_iteration != 0 && scd.hasTrayectoryChanged(previous_ball_center.y, ball_center.y))
                 {
@@ -221,6 +215,7 @@ int main(int argc, char** argv)
 						projected_ball_center.y += ball_radius;
 						cv::circle(decision_frame, projected_ball_center, 3, cv::Scalar(255,0,0), -1, 8, 0);
 						decision_result = ld.getDecision(decision_frame, projected_ball_center, ball_radius);
+						
 
 						// result image
 						decision_frame.copyTo(result_image);
@@ -228,10 +223,45 @@ int main(int argc, char** argv)
 						cv::line(result_image, lines[1], lines[2], cv::Scalar(0,0,255));
 						cv::line(result_image, lines[2], lines[3], cv::Scalar(0,0,255));
 						cv::line(result_image, lines[3], lines[0], cv::Scalar(0,0,255));
+						
+						//drawing detected circles
+						// circle center
+						cv::circle(result_image, ball_center, 3, cv::Scalar(0,255,0), -1, 8, 0);
+						// circle outline
+						cv::circle(result_image, ball_center, ball_radius, cv::Scalar(0,0,255), 3, 8, 0);
 					}
 					else
 					{
 						std::cout << "Error : ball does not exist in decision frame" << std::endl;
+						
+						//if ball does not exist in the decision frame, then we use the current frame
+						std::cout << "Using current frame" << std::endl;
+						
+						if(bd.detect_ball(image, ball_center, ball_radius))
+						{
+							//testing the line decision, uncomment for debugging
+							cv::Point2i projected_ball_center = ball_center;
+							projected_ball_center.y += ball_radius;
+							cv::circle(image, projected_ball_center, 3, cv::Scalar(255,0,0), -1, 8, 0);
+							decision_result = ld.getDecision(image, projected_ball_center, ball_radius);
+
+							// result image
+							image.copyTo(result_image);
+							cv::line(result_image, lines[0], lines[1], cv::Scalar(0,0,255));
+							cv::line(result_image, lines[1], lines[2], cv::Scalar(0,0,255));
+							cv::line(result_image, lines[2], lines[3], cv::Scalar(0,0,255));
+							cv::line(result_image, lines[3], lines[0], cv::Scalar(0,0,255));
+							
+							//drawing detected circles
+							// circle center
+							cv::circle(result_image, ball_center, 3, cv::Scalar(0,255,0), -1, 8, 0);
+							// circle outline
+							cv::circle(result_image, ball_center, ball_radius, cv::Scalar(0,0,255), 3, 8, 0);
+						}
+						else
+						{
+							std::cout << "Error : ball does not exist in current frame" << std::endl;
+						}
 					}
 
                     if(decision_result == -1) 
