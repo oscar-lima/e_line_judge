@@ -22,4 +22,4 @@ or
 
 
 ### Authors
-Oscar Lima and Santosh Thoduka
+Oscar Lima(@oscar-lima) and Santosh Thoduka(@sthoduka)
