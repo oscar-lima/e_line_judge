@@ -254,6 +254,7 @@ void UserCalibration::getLineLimits(const cv::Mat &image, std::vector<cv::Point2
     
     do
     {
+        line_corner_points.clear();
         setDisplay("Click bottom left corner of line");
         while(!set_bottom_left)
         {
